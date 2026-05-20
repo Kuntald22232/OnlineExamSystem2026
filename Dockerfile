@@ -6,8 +6,8 @@ COPY . .
 
 RUN chmod +x gradlew
 
-RUN ./gradlew clean build -x test
+RUN ./gradlew clean bootJar -x test
 
-COPY build/libs/*.jar app.jar
+RUN cp build/libs/*.jar app.jar
 
 ENTRYPOINT ["java","-jar","app.jar"]
