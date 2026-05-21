@@ -3,10 +3,12 @@ package in.java.oes2026.auth.service;
 import in.java.oes2026.auth.dto.LoginRequest;
 import in.java.oes2026.auth.dto.LoginResponse;
 import in.java.oes2026.auth.dto.RegisterRequest;
+import in.java.oes2026.common.enums.Role;
 import in.java.oes2026.user.entity.User;
 import in.java.oes2026.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,8 +29,16 @@ public class AuthService {
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
+                .password(
+                        passwordEncoder.encode(
+                                request.getPassword()
+                        )
+                )
+                .role(
+                	    request.getRole() != null
+                	        ? request.getRole()
+                	        : Role.STUDENT
+                	)
                 .build();
 
         userRepository.save(user);
@@ -36,7 +46,9 @@ public class AuthService {
         return "User Registered Successfully!";
     }
 
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(
+            LoginRequest request
+    ) {
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -46,14 +58,23 @@ public class AuthService {
         );
 
         User user = userRepository
-                .findByEmail(request.getEmail())
+                .findByEmail(
+                        request.getEmail()
+                )
                 .orElseThrow();
 
-        String redirectTo = switch (user.getRole()) {
-            case STUDENT -> "/student/dashboard";
-            case EXAMINER -> "/teacher/dashboard";
-            case ADMIN -> "/admin/dashboard";
-        };
+        String redirectTo =
+                switch (user.getRole()) {
+
+                    case STUDENT ->
+                            "/student/dashboard";
+
+                    case EXAMINER ->
+                            "/teacher/dashboard";
+
+                    case ADMIN ->
+                            "/admin/dashboard";
+                };
 
         return new LoginResponse(
                 "Login Successful!",
