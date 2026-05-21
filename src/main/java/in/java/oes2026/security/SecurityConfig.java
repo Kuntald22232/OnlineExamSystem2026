@@ -78,7 +78,8 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(
                 List.of(
-                        "http://localhost:3000"
+                        "http://localhost:3000",
+                        "https://online-exam-2026.netlify.app"
                 )
         );
 
