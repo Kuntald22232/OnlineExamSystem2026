@@ -7,6 +7,7 @@ import in.java.oes2026.common.enums.Role;
 import in.java.oes2026.user.entity.User;
 import in.java.oes2026.user.repository.UserRepository;
 import in.java.oes2026.security.JwtService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,47 +23,49 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
-    // REGISTER
+    // ================= REGISTER =================
     public String register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
             return "Email already exists!";
         }
 
+        // 🔥 SAFE ROLE PARSE
+        Role role = (request.getRole() != null)
+                ? request.getRole()
+                : Role.STUDENT;
+
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() != null ? request.getRole() : Role.STUDENT)
+                .role(role)
                 .build();
 
         userRepository.save(user);
 
-        return "User Registered Successfully!";
+        return role + " Registered Successfully!";
     }
 
-    // LOGIN
+    // ================= LOGIN =================
     public LoginResponse login(LoginRequest request) {
 
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
-                    )
-            );
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid Email or Password");
-        }
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String token = jwtService.generateToken(user.getEmail());
 
+        // 🔥 CORRECT REDIRECT
         String redirectTo = switch (user.getRole()) {
             case STUDENT -> "/student/dashboard";
-            case EXAMINER -> "/teacher/dashboard";
+            case EXAMINER -> "/examiner/dashboard";
             case ADMIN -> "/admin/dashboard";
         };
 
