@@ -52,7 +52,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                          
-                        .requestMatchers("/home").permitAll()
+                        .requestMatchers("/**").permitAll()
                         
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/exams/**").permitAll()
