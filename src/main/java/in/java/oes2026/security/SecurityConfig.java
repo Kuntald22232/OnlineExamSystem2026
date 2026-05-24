@@ -57,7 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/exams/**").permitAll()
                         .requestMatchers("/api/questions/**").permitAll()
                         .requestMatchers("/api/student/exam/**").permitAll()
-                        .requestMatchers("/api/teacher/**").permitAll()
+                        .requestMatchers("/api/teacher/**").hasAuthority("EXAMINER")
                         .requestMatchers("/api/results/**").permitAll()
 
                         // 🔐 ROLE BASED
