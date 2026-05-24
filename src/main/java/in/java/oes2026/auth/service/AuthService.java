@@ -6,6 +6,7 @@ import in.java.oes2026.auth.dto.RegisterRequest;
 import in.java.oes2026.common.enums.Role;
 import in.java.oes2026.user.entity.User;
 import in.java.oes2026.user.repository.UserRepository;
+import in.java.oes2026.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,7 +20,9 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
+    // REGISTER
     public String register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -29,16 +32,8 @@ public class AuthService {
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
-                .password(
-                        passwordEncoder.encode(
-                                request.getPassword()
-                        )
-                )
-                .role(
-                	    request.getRole() != null
-                	        ? request.getRole()
-                	        : Role.STUDENT
-                	)
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(request.getRole() != null ? request.getRole() : Role.STUDENT)
                 .build();
 
         userRepository.save(user);
@@ -46,9 +41,8 @@ public class AuthService {
         return "User Registered Successfully!";
     }
 
-    public LoginResponse login(
-            LoginRequest request
-    ) {
+    // LOGIN
+    public LoginResponse login(LoginRequest request) {
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -57,27 +51,20 @@ public class AuthService {
                 )
         );
 
-        User user = userRepository
-                .findByEmail(
-                        request.getEmail()
-                )
-                .orElseThrow();
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String redirectTo =
-                switch (user.getRole()) {
+        String token = jwtService.generateToken(user.getEmail());
 
-                    case STUDENT ->
-                            "/student/dashboard";
-
-                    case EXAMINER ->
-                            "/teacher/dashboard";
-
-                    case ADMIN ->
-                            "/admin/dashboard";
-                };
+        String redirectTo = switch (user.getRole()) {
+            case STUDENT -> "/student/dashboard";
+            case EXAMINER -> "/teacher/dashboard";
+            case ADMIN -> "/admin/dashboard";
+        };
 
         return new LoginResponse(
                 "Login Successful!",
+                token,
                 user.getRole().name(),
                 redirectTo
         );

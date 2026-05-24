@@ -16,7 +16,7 @@ import in.java.oes2026.exam.result.service.StudentResultService;
 @RestController
 @RequestMapping("/api/results")
 @CrossOrigin(
-origins = "http://localhost:3000"
+origins = "*"
 )
 public class ResultController {
 

@@ -29,4 +29,12 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean active = true;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean examEligible = true;
 }

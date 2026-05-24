@@ -15,6 +15,10 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @GetMapping("/test")
+    public String test() {
+        return "<h1>Backend Working</h1>";
+    }
     @PostMapping("/register")
     public String register(
             @Valid @RequestBody RegisterRequest request
