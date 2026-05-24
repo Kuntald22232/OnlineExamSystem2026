@@ -7,7 +7,7 @@ import in.java.oes2026.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -20,12 +20,10 @@ public class AuthController {
         return "<h1>Backend Working</h1>";
     }
     @PostMapping("/register")
-    public String register(
-            @Valid @RequestBody RegisterRequest request
-    ) {
-        return authService.register(request);
+    public Map<String, String> register(@Valid @RequestBody RegisterRequest request) {
+        String msg = authService.register(request);
+        return Map.of("message", msg);
     }
-
     @PostMapping("/login")
     public LoginResponse login(
             @Valid @RequestBody LoginRequest request

@@ -51,20 +51,21 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                         
-                        .requestMatchers("/**").permitAll()
-                        
+
+                        // ✅ PUBLIC
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/exams/**").permitAll()
                         .requestMatchers("/api/questions/**").permitAll()
                         .requestMatchers("/api/student/exam/**").permitAll()
                         .requestMatchers("/api/teacher/**").permitAll()
                         .requestMatchers("/api/results/**").permitAll()
-                        
+
+                        // 🔐 ROLE BASED
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
                         .requestMatchers("/api/examiner/**").hasRole("EXAMINER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
+                        // 🔒 बाकी sob protected
                         .anyRequest().authenticated()
                 )
 
@@ -109,8 +110,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "https://onlineexamsystem2026.onrender.com"
+                "http://localhost:3000"
+                
         ));
 
         configuration.setAllowedMethods(List.of(
