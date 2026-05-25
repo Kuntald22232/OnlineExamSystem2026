@@ -120,7 +120,7 @@ public class SecurityConfig {
                 "Authorization"
         ));
 
-        configuration.setAllowCredentials(false);
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
