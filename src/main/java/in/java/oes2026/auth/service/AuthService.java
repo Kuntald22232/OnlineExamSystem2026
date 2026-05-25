@@ -26,11 +26,15 @@ public class AuthService {
     // ================= REGISTER =================
     public String register(RegisterRequest request) {
 
+        System.out.println("========== REGISTER ==========");
+        System.out.println("FULL NAME: " + request.getFullName());
+        System.out.println("EMAIL: " + request.getEmail());
+        System.out.println("ROLE: " + request.getRole());
+
         if (userRepository.existsByEmail(request.getEmail())) {
             return "Email already exists!";
         }
 
-        // 🔥 SAFE ROLE PARSE
         Role role = (request.getRole() != null)
                 ? request.getRole()
                 : Role.STUDENT;
