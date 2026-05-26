@@ -1,6 +1,6 @@
 package in.java.oes2026.exam.user.repository;
 
-import in.java.oes2026.exam.user.entity.Role;
+import in.java.oes2026.common.enums.*;
 import in.java.oes2026.exam.user.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
