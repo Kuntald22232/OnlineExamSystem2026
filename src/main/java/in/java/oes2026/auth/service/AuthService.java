@@ -29,15 +29,23 @@ public class AuthService {
         System.out.println("========== REGISTER ==========");
         System.out.println("FULL NAME: " + request.getFullName());
         System.out.println("EMAIL: " + request.getEmail());
-        System.out.println("ROLE: " + request.getRole());
+        System.out.println("ROLE RECEIVED: " + request.getRole());
+
+        // 🔥 DEBUG EXAMINER CHECK
+        if (request.getRole() == Role.EXAMINER) {
+            System.out.println("🔥 EXAMINER DETECTED");
+        }
 
         if (userRepository.existsByEmail(request.getEmail())) {
+            System.out.println("❌ EMAIL ALREADY EXISTS");
             return "Email already exists!";
         }
 
         Role role = (request.getRole() != null)
                 ? request.getRole()
                 : Role.STUDENT;
+
+        System.out.println("✅ FINAL ROLE: " + role);
 
         User user = User.builder()
                 .fullName(request.getFullName())
@@ -46,7 +54,11 @@ public class AuthService {
                 .role(role)
                 .build();
 
+        System.out.println("💾 SAVING USER...");
+
         userRepository.save(user);
+
+        System.out.println("✅ USER SAVED SUCCESSFULLY");
 
         return role + " Registered Successfully!";
     }
