@@ -114,11 +114,10 @@ public class SecurityConfig {
         CorsConfiguration configuration =
                 new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "https://online-exam-2026.netlify.app"
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "https://*.netlify.app"
         ));
-
         configuration.setAllowedMethods(List.of(
                 "GET",
                 "POST",
