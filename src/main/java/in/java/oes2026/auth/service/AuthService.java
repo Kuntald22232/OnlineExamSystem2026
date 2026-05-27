@@ -24,6 +24,7 @@ public class AuthService {
     private final JwtService jwtService;
 
     // ================= REGISTER =================
+ // ================= REGISTER =================
     public String register(RegisterRequest request) {
 
         System.out.println("========== REGISTER ==========");
@@ -54,15 +55,21 @@ public class AuthService {
                 .role(role)
                 .build();
 
+        // 🔥 ADD THIS
+        System.out.println("🔥 USER OBJECT: " + user);
+
         System.out.println("💾 SAVING USER...");
 
+        // 🔥 THIS LINE IS IMPORTANT
         userRepository.save(user);
+
+        // 🔥 ADD THIS
+        System.out.println("✅ SAVED IN DATABASE");
 
         System.out.println("✅ USER SAVED SUCCESSFULLY");
 
         return role + " Registered Successfully!";
     }
-
     // ================= LOGIN =================
     public LoginResponse login(LoginRequest request) {
 
