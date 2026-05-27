@@ -6,6 +6,7 @@ import in.java.oes2026.auth.dto.RegisterRequest;
 import in.java.oes2026.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -19,25 +20,48 @@ public class AuthController {
 
     @GetMapping("/test")
     public String test() {
-        return "<h1>Backend Working</h1>";
+        return "Backend Working";
     }
 
     @PostMapping("/register")
-    public Map<String, String> register(
+    public ResponseEntity<?> register(
             @Valid @RequestBody RegisterRequest request
     ) {
 
-        // 🔥 DEBUG LOG
-        System.out.println("========== REGISTER CONTROLLER ==========");
-        System.out.println("FULL NAME: " + request.getFullName());
-        System.out.println("EMAIL: " + request.getEmail());
-        System.out.println("ROLE RECEIVED: " + request.getRole());
+        try {
 
-        String msg = authService.register(request);
+            System.out.println("========== REGISTER ==========");
+            System.out.println("FULL NAME: " + request.getFullName());
+            System.out.println("EMAIL: " + request.getEmail());
+            System.out.println("ROLE: " + request.getRole());
 
-        System.out.println("REGISTER SUCCESS: " + msg);
+            String msg =
+                    authService.register(request);
 
-        return Map.of("message", msg);
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            msg
+                    )
+            );
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "❌ REGISTER ERROR"
+            );
+
+            e.printStackTrace();
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            Map.of(
+                                    "error",
+                                    e.getMessage()
+                            )
+                    );
+        }
     }
 
     @PostMapping("/login")
