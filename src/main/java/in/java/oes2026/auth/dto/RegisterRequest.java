@@ -1,6 +1,6 @@
 package in.java.oes2026.auth.dto;
 
-//import in.java.oes2026.common.enums.Role;
+import in.java.oes2026.common.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -17,5 +17,5 @@ public class RegisterRequest {
     @NotBlank
     private String password;
 
-    private String role;;
+    private Role role;
 }
