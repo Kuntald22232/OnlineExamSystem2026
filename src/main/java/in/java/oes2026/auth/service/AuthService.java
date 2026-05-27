@@ -23,8 +23,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
-    // ================= REGISTER =================
- // ================= REGISTER =================
+   // ================= REGISTER =================
     public String register(RegisterRequest request) {
 
         System.out.println("========== REGISTER ==========");
@@ -37,38 +36,62 @@ public class AuthService {
             System.out.println("🔥 EXAMINER DETECTED");
         }
 
+        // ✅ EMAIL CHECK
         if (userRepository.existsByEmail(request.getEmail())) {
             System.out.println("❌ EMAIL ALREADY EXISTS");
             return "Email already exists!";
         }
 
+        // ✅ ROLE SET
         Role role = (request.getRole() != null)
                 ? request.getRole()
                 : Role.STUDENT;
 
         System.out.println("✅ FINAL ROLE: " + role);
 
+        // ✅ BUILD USER
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .password(
+                        passwordEncoder.encode(
+                                request.getPassword()
+                        )
+                )
                 .role(role)
                 .build();
 
-        // 🔥 ADD THIS
-        System.out.println("🔥 USER OBJECT: " + user);
+        // 🔥 DEBUG USER OBJECT
+        System.out.println(
+                "🔥 USER OBJECT: " + user
+        );
 
-        System.out.println("💾 SAVING USER...");
+        // 🔥 IMPORTANT DEBUG
+        System.out.println(
+                "🔥 ROLE TYPE = " + role.name()
+        );
 
-        // 🔥 THIS LINE IS IMPORTANT
+        System.out.println(
+                "🔥 USER ROLE = " + user.getRole()
+        );
+
+        System.out.println(
+                "💾 SAVING USER..."
+        );
+
+        // 💾 SAVE
         userRepository.save(user);
 
-        // 🔥 ADD THIS
-        System.out.println("✅ SAVED IN DATABASE");
+        System.out.println(
+                "✅ SAVED IN DATABASE"
+        );
 
-        System.out.println("✅ USER SAVED SUCCESSFULLY");
+        System.out.println(
+                "✅ USER SAVED SUCCESSFULLY"
+        );
 
-        return role + " Registered Successfully!";
+        return role
+                + " Registered Successfully!";
     }
     // ================= LOGIN =================
     public LoginResponse login(LoginRequest request) {
