@@ -110,10 +110,10 @@ public class AuthService {
 
         // 🔥 CORRECT REDIRECT
         String redirectTo = switch (user.getRole()) {
-            case STUDENT -> "/student/dashboard";
-            case EXAMINER -> "/examiner/dashboard";
-            case ADMIN -> "/admin/dashboard";
-        };
+        case STUDENT -> "/student/dashboard";
+        case EXAMINER -> "/admin/dashboard";
+        case ADMIN -> "/admin/dashboard";
+    };
 
         return new LoginResponse(
                 "Login Successful!",
