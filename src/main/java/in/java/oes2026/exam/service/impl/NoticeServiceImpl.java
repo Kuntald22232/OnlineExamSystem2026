@@ -3,35 +3,30 @@ package in.java.oes2026.exam.service.impl;
 import in.java.oes2026.exam.entity.notice.Notice;
 import in.java.oes2026.exam.repository.NoticeRepository;
 import in.java.oes2026.exam.service.NoticeService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class NoticeServiceImpl
         implements NoticeService {
 
-    @Autowired
-    private NoticeRepository
+    private final NoticeRepository
             noticeRepository;
 
-    // ✅ Better upload path
-    private final String
+    private static final String
             UPLOAD_DIR =
-            System.getProperty(
-                    "user.dir"
-            )
-                    + File.separator
-                    + "uploads"
-                    + File.separator
-                    + "notices"
-                    + File.separator;
+            "uploads/notices/";
 
     @Override
     public Map<String, String>
@@ -52,42 +47,61 @@ public class NoticeServiceImpl
 
                 response.put(
                         "message",
-                        "File is empty"
+                        "Please select a PDF file"
                 );
 
                 return response;
             }
 
-            // create folder
-            File directory =
-                    new File(
+            // only PDF allowed
+            String contentType =
+                    file.getContentType();
+
+            if (contentType == null
+                    || !contentType.equals(
+                    "application/pdf"
+            )) {
+
+                response.put(
+                        "message",
+                        "Only PDF files are allowed"
+                );
+
+                return response;
+            }
+
+            // create upload folder
+            Path uploadPath =
+                    Paths.get(
                             UPLOAD_DIR
                     );
 
-            if (!directory
-                    .exists()) {
+            if (!Files.exists(
+                    uploadPath
+            )) {
 
-                directory
-                        .mkdirs();
+                Files.createDirectories(
+                        uploadPath
+                );
             }
 
-            // unique file name
+            // generate unique filename
             String fileName =
                     UUID.randomUUID()
                             + "_"
                             + file
                             .getOriginalFilename();
 
-            // save path
-            File destinationFile =
-                    new File(
-                            UPLOAD_DIR
-                                    + fileName
+            // save file path
+            Path filePath =
+                    uploadPath.resolve(
+                            fileName
                     );
 
             // save file
-            file.transferTo(
-                    destinationFile
+            Files.copy(
+                    file.getInputStream(),
+                    filePath
             );
 
             // save DB
@@ -111,6 +125,11 @@ public class NoticeServiceImpl
             );
 
             response.put(
+                    "fileName",
+                    fileName
+            );
+
+            response.put(
                     "pdfUrl",
                     "/uploads/notices/"
                             + fileName
@@ -120,7 +139,7 @@ public class NoticeServiceImpl
                 IOException e
         ) {
 
-            e.printStackTrace(); // ✅ show exact error
+            e.printStackTrace();
 
             response.put(
                     "message",
