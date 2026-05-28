@@ -59,6 +59,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/student/exam/**").permitAll()
                         .requestMatchers("/api/results/**").permitAll()
 
+                        // ✅ Notice Upload API
+                        .requestMatchers("/api/upcoming-exam/**")
+                        .permitAll()
+
                         // 🔐 ROLE BASED
                         .requestMatchers("/api/student/**")
                         .hasRole("STUDENT")
