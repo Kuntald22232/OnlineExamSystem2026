@@ -1,6 +1,5 @@
 package in.java.oes2026.exam.config;
 
-
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -17,19 +16,23 @@ public class WebConfig
     ) {
 
         String uploadPath =
-                System.getProperty(
-                        "user.dir"
-                )
+                System.getProperty("user.dir")
                         + File.separator
                         + "uploads"
                         + File.separator;
 
-        registry.addResourceHandler(
+        System.out.println(
+                "UPLOAD PATH: "
+                        + uploadPath
+        );
+
+        registry
+                .addResourceHandler(
                         "/uploads/**"
                 )
                 .addResourceLocations(
-                        "file:"
-                                + uploadPath
+                        "file:///" +
+                                uploadPath
                 );
     }
 }

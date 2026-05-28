@@ -67,6 +67,7 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**")
                         .permitAll()
                         
+                        
                         // 🔐 ROLE BASED
                         .requestMatchers("/api/student/**")
                         .hasRole("STUDENT")

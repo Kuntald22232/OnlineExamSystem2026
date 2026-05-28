@@ -7,11 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -23,10 +20,6 @@ public class NoticeServiceImpl
 
     private final NoticeRepository
             noticeRepository;
-
-    private static final String
-            UPLOAD_DIR =
-            "uploads/notices/";
 
     @Override
     public Map<String, String>
@@ -41,7 +34,6 @@ public class NoticeServiceImpl
 
         try {
 
-            // validation
             if (file == null
                     || file.isEmpty()) {
 
@@ -53,7 +45,6 @@ public class NoticeServiceImpl
                 return response;
             }
 
-            // only PDF allowed
             String contentType =
                     file.getContentType();
 
@@ -70,12 +61,19 @@ public class NoticeServiceImpl
                 return response;
             }
 
-            // create upload folder
+            // ✅ ABSOLUTE PATH
+            String uploadDir =
+                    System.getProperty(
+                            "user.dir"
+                    )
+                            + "/uploads/notices/";
+
             Path uploadPath =
                     Paths.get(
-                            UPLOAD_DIR
+                            uploadDir
                     );
 
+            // create folder
             if (!Files.exists(
                     uploadPath
             )) {
@@ -85,26 +83,30 @@ public class NoticeServiceImpl
                 );
             }
 
-            // generate unique filename
+            // unique filename
             String fileName =
                     UUID.randomUUID()
                             + "_"
                             + file
                             .getOriginalFilename();
 
-            // save file path
             Path filePath =
                     uploadPath.resolve(
                             fileName
                     );
 
-            // save file
+            // replace existing if needed
             Files.copy(
                     file.getInputStream(),
-                    filePath
+                    filePath,
+                    StandardCopyOption.REPLACE_EXISTING
             );
 
-            // save DB
+            System.out.println(
+                    "FILE SAVED: "
+                            + filePath
+            );
+
             Notice notice =
                     new Notice();
 
@@ -131,7 +133,7 @@ public class NoticeServiceImpl
 
             response.put(
                     "pdfUrl",
-                    "/uploads/notices/"
+                    "https://onlineexamsystem2026.onrender.com/uploads/notices/"
                             + fileName
             );
 
