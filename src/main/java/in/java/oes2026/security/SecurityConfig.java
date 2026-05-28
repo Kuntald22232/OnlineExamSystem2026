@@ -69,17 +69,11 @@ public class SecurityConfig {
                         
                         
                         // 🔐 ROLE BASED
-                        .requestMatchers("/api/student/**")
-                        .hasRole("STUDENT")
+                        .requestMatchers("/api/student/**").hasAuthority("STUDENT")
 
-                        .requestMatchers("/api/examiner/**")
-                        .hasAnyRole(
-                                "EXAMINER",
-                                "ADMIN"
-                        )
+                        .requestMatchers("/api/examiner/**").hasAnyAuthority("EXAMINER", "ADMIN")
 
-                        .requestMatchers("/api/admin/**")
-                        .hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
                         // 🔒 बाकी sob protected
                         .anyRequest().authenticated()
