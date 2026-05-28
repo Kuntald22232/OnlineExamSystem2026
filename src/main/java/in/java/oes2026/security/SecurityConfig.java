@@ -63,6 +63,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/upcoming-exam/**")
                         .permitAll()
 
+                        // PDF access
+                        .requestMatchers("/uploads/**")
+                        .permitAll()
+                        
                         // 🔐 ROLE BASED
                         .requestMatchers("/api/student/**")
                         .hasRole("STUDENT")
