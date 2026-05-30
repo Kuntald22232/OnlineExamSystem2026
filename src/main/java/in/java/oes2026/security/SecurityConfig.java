@@ -54,8 +54,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
 
                         // ================= EXAMS =================
-                        .requestMatchers(HttpMethod.GET, "/api/exams/**")
-                        .hasAnyRole("STUDENT", "ADMIN")
+                     // STUDENT specific endpoints
+                        .requestMatchers("/api/exams/student/**").hasRole("STUDENT")
+
+                        // ADMIN only exam management
+                        .requestMatchers("/api/exams/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/exams/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/exams/**").hasRole("ADMIN")
