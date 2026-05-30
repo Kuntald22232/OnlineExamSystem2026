@@ -1,5 +1,6 @@
 package in.java.oes2026.exam.question.controller;
 
+import in.java.oes2026.exam.question.dto.QuestionRequest;
 import in.java.oes2026.exam.question.entity.QuestionEntity;
 import in.java.oes2026.exam.question.service.QuestionService;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +17,8 @@ public class QuestionController {
     private final QuestionService questionService;
 
     @PostMapping
-    public QuestionEntity addQuestion(@RequestBody QuestionEntity question) {
-        return questionService.addQuestion(question);
+    public QuestionEntity addQuestion(@RequestBody QuestionRequest request) {
+        return questionService.addQuestion(request);
     }
 
     @GetMapping("/exam/{examId}")
@@ -30,15 +31,13 @@ public class QuestionController {
     @PutMapping("/{id}")
     public QuestionEntity updateQuestion(
             @PathVariable("id") Long id,
-            @RequestBody QuestionEntity updatedQuestion
+            @RequestBody QuestionRequest request
     ) {
-        return questionService.updateQuestion(id, updatedQuestion);
+        return questionService.updateQuestion(id, request);
     }
 
     @DeleteMapping("/{id}")
-    public String deleteQuestion(
-            @PathVariable("id") Long id
-    ) {
+    public String deleteQuestion(@PathVariable("id") Long id) {
         questionService.deleteQuestion(id);
         return "Deleted successfully: " + id;
     }

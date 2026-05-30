@@ -136,7 +136,7 @@ public class SecurityConfig {
 
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
-                "https://*.netlify.app"
+                "https://online-exam-2026.netlify.app"
         ));
 
         configuration.setAllowedMethods(List.of(
