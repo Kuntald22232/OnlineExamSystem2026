@@ -9,7 +9,6 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -46,59 +45,45 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // =========================
-                        // PUBLIC
-                        // =========================
+                        // ================= PUBLIC =================
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
 
-                        // =========================
-                        // STUDENT ONLY
-                        // =========================
+                        // ================= STUDENT =================
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
-                        .requestMatchers("/api/student/exam/submit").hasRole("STUDENT")
 
-                        // =========================
-                        // EXAMS (ADMIN ONLY for write)
-                        // =========================
+                        // ================= EXAMS =================
                         .requestMatchers(HttpMethod.GET, "/api/exams/**")
                         .hasAnyRole("STUDENT", "ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/exams/**")
+                        .requestMatchers(HttpMethod.POST, "/api/exams/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/exams/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/exams/**").hasRole("ADMIN")
+
+                        // ================= QUESTIONS (🔥 FIXED) =================
+                        .requestMatchers(HttpMethod.GET, "/api/questions/**")
+                        .hasAnyRole("STUDENT", "ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/questions/**")
                         .hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.PUT, "/api/exams/**")
+                        .requestMatchers(HttpMethod.PUT, "/api/questions/**")
                         .hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.DELETE, "/api/exams/**")
+                        .requestMatchers(HttpMethod.DELETE, "/api/questions/**")
                         .hasRole("ADMIN")
 
-                        // =========================
-                        // QUESTIONS (ADMIN ONLY)
-                        // =========================
-                        .requestMatchers("/api/questions/**")
-                        .hasRole("ADMIN")
-
-                        // =========================
-                        // RESULTS
-                        // =========================
+                        // ================= RESULTS =================
                         .requestMatchers("/api/results/**")
                         .hasAnyRole("STUDENT", "ADMIN")
 
-                        // =========================
-                        // ADMIN ONLY
-                        // =========================
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // ================= ADMIN =================
+                        .requestMatchers("/api/admin/**")
+                        .hasRole("ADMIN")
 
-                        // =========================
-                        // EVERYTHING ELSE SECURE
-                        // =========================
                         .anyRequest().authenticated()
                 )
-
-                .httpBasic(httpBasic -> httpBasic.disable())
-                .formLogin(form -> form.disable())
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,
@@ -109,30 +94,13 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider(
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder
-    ) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
-        return provider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config
-    ) throws Exception {
-        return config.getAuthenticationManager();
-    }
-
-    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOriginPatterns(List.of(
-        		"https://*.netlify.app"
+                "http://localhost:3000",
+                "https://online-exam-2026.netlify.app"
         ));
 
         configuration.setAllowedMethods(List.of(
@@ -145,9 +113,9 @@ public class SecurityConfig {
 
         configuration.setAllowedHeaders(List.of("*"));
 
-        configuration.setExposedHeaders(List.of("Authorization"));
-
         configuration.setAllowCredentials(true);
+
+        configuration.setExposedHeaders(List.of("Authorization"));
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
@@ -155,5 +123,23 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider(
+            UserDetailsService userDetailsService,
+            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder
+    ) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config
+    ) throws Exception {
+        return config.getAuthenticationManager();
     }
 }
