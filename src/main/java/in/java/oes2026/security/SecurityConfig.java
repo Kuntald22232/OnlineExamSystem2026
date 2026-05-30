@@ -21,14 +21,12 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-    // 🔥 ADD JWT FILTER
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-    // 🔐 SECURITY FILTER CHAIN
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -38,10 +36,8 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-
                 .authenticationProvider(authProvider)
 
-                // 🔥 JWT ADDED STATELESS SESSION
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 org.springframework.security.config.http.SessionCreationPolicy.STATELESS
@@ -50,68 +46,82 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // ✅ PUBLIC
+                        // =========================
+                        // PUBLIC
+                        // =========================
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/exams/**").permitAll()
-                        .requestMatchers("/api/questions/**").permitAll()
-                        .requestMatchers("/api/student/exam/**").permitAll()
-                        .requestMatchers("/api/results/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
 
-                        // ✅ Notice Upload API
-                        .requestMatchers("/api/upcoming-exam/**")
-                        .permitAll()
+                        // =========================
+                        // STUDENT ACCESS
+                        // =========================
+                        .requestMatchers("/api/student/**").hasRole("STUDENT")
+                        .requestMatchers("/api/student/exam/submit").hasRole("STUDENT")
 
-                        // PDF access
-                        .requestMatchers("/uploads/**")
-                        .permitAll()
-                        
-                        
-                        // 🔐 ROLE BASED
-                        .requestMatchers("/api/student/**")
-                        .hasRole("STUDENT")
+                        // =========================
+                        // EXAMS (READ ONLY for students, write for examiner/admin)
+                        // =========================
+                        .requestMatchers(HttpMethod.GET, "/api/exams/**")
+                        .hasAnyRole("STUDENT", "EXAMINER", "ADMIN")
 
-                        .requestMatchers("/api/examiner/**")
-                        .hasAnyRole(
-                                "EXAMINER",
-                                "ADMIN"
-                        )
+                        .requestMatchers(HttpMethod.POST, "/api/exams/**")
+                        .hasAnyRole("EXAMINER", "ADMIN")
 
-                        .requestMatchers("/api/admin/**")
-                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/exams/**")
+                        .hasAnyRole("EXAMINER", "ADMIN")
 
-                        // 🔒 बाकी sob protected
+                        .requestMatchers(HttpMethod.DELETE, "/api/exams/**")
+                        .hasAnyRole("EXAMINER", "ADMIN")
+
+                        // =========================
+                        // QUESTIONS
+                        // =========================
+                        .requestMatchers(HttpMethod.GET, "/api/questions/**")
+                        .hasAnyRole("STUDENT", "EXAMINER", "ADMIN")
+
+                        .requestMatchers("/api/questions/**")
+                        .hasAnyRole("EXAMINER", "ADMIN")
+
+                        // =========================
+                        // RESULTS
+                        // =========================
+                        .requestMatchers("/api/results/**")
+                        .hasAnyRole("STUDENT", "ADMIN", "EXAMINER")
+
+                        // =========================
+                        // ADMIN ONLY
+                        // =========================
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // =========================
+                        // OTHERS SECURE
+                        // =========================
                         .anyRequest().authenticated()
                 )
 
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(form -> form.disable())
 
-                // 🔥 JWT FILTER ADDED HERE
-                .addFilterBefore(jwtAuthenticationFilter,
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 );
 
         return http.build();
     }
 
-    // 🔐 AUTH PROVIDER
     @Bean
     public AuthenticationProvider authenticationProvider(
             UserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder
     ) {
-
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
-
         return provider;
     }
 
-    // 🔐 AUTH MANAGER
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config
@@ -119,17 +129,16 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    // 🌐 CORS CONFIG (UNCHANGED)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration =
-                new CorsConfiguration();
+        CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "https://*.netlify.app"
         ));
+
         configuration.setAllowedMethods(List.of(
                 "GET",
                 "POST",
@@ -140,20 +149,14 @@ public class SecurityConfig {
 
         configuration.setAllowedHeaders(List.of("*"));
 
-        configuration.setExposedHeaders(List.of(
-                "Authorization"
-        ));
+        configuration.setExposedHeaders(List.of("Authorization"));
 
-        // ✅ Login/Register er jonno true
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
     }

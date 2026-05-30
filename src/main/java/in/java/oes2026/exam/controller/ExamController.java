@@ -15,47 +15,59 @@ public class ExamController {
 
     private final ExamService examService;
 
-    // =========================
-    // CREATE EXAM (TEACHER)
-    // =========================
+    // ================= CREATE =================
     @PostMapping
     public ExamEntity createExam(@RequestBody ExamEntity exam) {
         return examService.createExam(exam);
     }
 
-    // =========================
-    // GET ALL EXAMS (ADMIN)
-    // =========================
+    // ================= UPDATE =================
+    @PutMapping("/{examId}")
+    public ExamEntity updateExam(
+            @PathVariable("examId") Long examId,
+            @RequestBody ExamEntity updatedExam
+    ) {
+        return examService.updateExam(examId, updatedExam);
+    }
+
+    // ================= DELETE =================
+    @DeleteMapping("/{examId}")
+    public String deleteExam(
+            @PathVariable("examId") Long examId
+    ) {
+        examService.deleteExam(examId);
+        return "Exam deleted successfully: " + examId;
+    }
+
+    // ================= GET ALL =================
     @GetMapping
     public List<ExamEntity> getAllExams() {
         return examService.getAllExams();
     }
 
-    // =========================
-    // GET ACTIVE EXAMS
-    // =========================
+    // ================= GET BY ID =================
+    @GetMapping("/{examId}")
+    public ExamEntity getExamById(
+            @PathVariable("examId") Long examId
+    ) {
+        return examService.getById(examId);
+    }
+
+    // ================= ACTIVE =================
     @GetMapping("/active")
     public List<ExamEntity> getActiveExams() {
         return examService.getActiveExams();
     }
 
+    // ================= AVAILABLE =================
     @GetMapping("/student/available")
     public List<ExamEntity> getAvailableExams() {
         return examService.getAvailableExams();
     }
-    // =========================
-    // STUDENT UPCOMING EXAMS
-    // =========================
+
+    // ================= UPCOMING =================
     @GetMapping("/student/upcoming-exams")
     public List<ExamEntity> getStudentUpcomingExams() {
         return examService.getUpcomingExams();
-    }
-
-    // =========================
-    // GET SINGLE EXAM
-    // =========================
-    @GetMapping("/{id}")
-    public ExamEntity getExamById(@PathVariable Long id) {
-        return examService.getById(id);
     }
 }

@@ -1,6 +1,7 @@
 package in.java.oes2026.exam.question.service;
 
 import in.java.oes2026.exam.entity.ExamEntity;
+import in.java.oes2026.exam.question.dto.QuestionRequest;
 import in.java.oes2026.exam.question.entity.QuestionEntity;
 import in.java.oes2026.exam.question.repository.QuestionRepository;
 import in.java.oes2026.exam.repository.ExamRepository;
@@ -16,15 +17,19 @@ public class QuestionService {
     private final QuestionRepository questionRepository;
     private final ExamRepository examRepository;
 
-    public QuestionEntity addQuestion(QuestionEntity question) {
+    public QuestionEntity addQuestion(QuestionRequest request) {
 
-        if (question.getExam() == null || question.getExam().getId() == null) {
-            throw new RuntimeException("Exam ID is required");
-        }
-
-        ExamEntity exam = examRepository.findById(question.getExam().getId())
+        ExamEntity exam = examRepository.findById(request.getExamId())
                 .orElseThrow(() -> new RuntimeException("Exam not found"));
 
+        QuestionEntity question = new QuestionEntity();
+
+        question.setQuestionText(request.getQuestionText());
+        question.setOptionA(request.getOptionA());
+        question.setOptionB(request.getOptionB());
+        question.setOptionC(request.getOptionC());
+        question.setOptionD(request.getOptionD());
+        question.setCorrectAnswer(request.getCorrectAnswer());
         question.setExam(exam);
 
         return questionRepository.save(question);
@@ -34,27 +39,26 @@ public class QuestionService {
         return questionRepository.findByExam_Id(examId);
     }
 
-    public QuestionEntity updateQuestion(Long id, QuestionEntity updatedQuestion) {
+    public QuestionEntity updateQuestion(Long id, QuestionRequest request) {
 
         QuestionEntity existing = questionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Question not found"));
 
-        existing.setQuestionText(updatedQuestion.getQuestionText());
-        existing.setOptionA(updatedQuestion.getOptionA());
-        existing.setOptionB(updatedQuestion.getOptionB());
-        existing.setOptionC(updatedQuestion.getOptionC());
-        existing.setOptionD(updatedQuestion.getOptionD());
-        existing.setCorrectAnswer(updatedQuestion.getCorrectAnswer());
+        existing.setQuestionText(request.getQuestionText());
+        existing.setOptionA(request.getOptionA());
+        existing.setOptionB(request.getOptionB());
+        existing.setOptionC(request.getOptionC());
+        existing.setOptionD(request.getOptionD());
+        existing.setCorrectAnswer(request.getCorrectAnswer());
 
-        if (updatedQuestion.getExam() != null && updatedQuestion.getExam().getId() != null) {
-            ExamEntity exam = examRepository.findById(updatedQuestion.getExam().getId())
+        if (request.getExamId() != null) {
+            ExamEntity exam = examRepository.findById(request.getExamId())
                     .orElseThrow(() -> new RuntimeException("Exam not found"));
             existing.setExam(exam);
         }
 
         return questionRepository.save(existing);
     }
-
     public void deleteQuestion(Long id) {
         if (!questionRepository.existsById(id)) {
             throw new RuntimeException("Question not found");
