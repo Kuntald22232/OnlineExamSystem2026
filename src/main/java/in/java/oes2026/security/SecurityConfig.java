@@ -53,16 +53,19 @@ public class SecurityConfig {
                         // ================= STUDENT =================
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
 
-                        // ================= EXAMS =================
-                     // STUDENT specific endpoints
-                        .requestMatchers("/api/exams/student/**").hasRole("STUDENT")
+                     // ================= EXAMS =================
 
-                        // ADMIN only exam management
-                        .requestMatchers("/api/exams/**").hasRole("ADMIN")
+                     // STUDENT endpoints FIRST
+                     .requestMatchers("/api/exams/student/**").hasRole("STUDENT")
 
-                        .requestMatchers(HttpMethod.POST, "/api/exams/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/exams/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/exams/**").hasRole("ADMIN")
+                     // GET exams for both
+                     .requestMatchers(HttpMethod.GET, "/api/exams/**")
+                     .hasAnyRole("STUDENT", "ADMIN")
+
+                     // ADMIN only write operations
+                     .requestMatchers(HttpMethod.POST, "/api/exams/**").hasRole("ADMIN")
+                     .requestMatchers(HttpMethod.PUT, "/api/exams/**").hasRole("ADMIN")
+                     .requestMatchers(HttpMethod.DELETE, "/api/exams/**").hasRole("ADMIN")
 
                         // ================= QUESTIONS (🔥 FIXED) =================
                         .requestMatchers(HttpMethod.GET, "/api/questions/**")
