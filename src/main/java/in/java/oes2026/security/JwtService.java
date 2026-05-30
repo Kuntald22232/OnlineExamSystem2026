@@ -14,22 +14,29 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
+    // =========================
+    // KEY GENERATION
+    // =========================
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
-    // 🔥 Generate Token
+    // =========================
+    // GENERATE TOKEN (username + role)
+    // =========================
     public String generateToken(String username, String role) {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // 🔥 Extract Username
+    // =========================
+    // EXTRACT USERNAME
+    // =========================
     public String extractUsername(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -39,7 +46,21 @@ public class JwtService {
                 .getSubject();
     }
 
-    // 🔥 Validate Token
+    // =========================
+    // EXTRACT ROLE (optional but useful)
+    // =========================
+    public String extractRole(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
+    }
+
+    // =========================
+    // VALIDATE TOKEN
+    // =========================
     public boolean isTokenValid(String token, String username) {
         try {
             return extractUsername(token).equals(username)
@@ -49,6 +70,9 @@ public class JwtService {
         }
     }
 
+    // =========================
+    // CHECK EXPIRATION
+    // =========================
     private boolean isTokenExpired(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
