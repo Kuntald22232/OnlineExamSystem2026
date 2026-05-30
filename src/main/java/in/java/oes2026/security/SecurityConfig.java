@@ -9,7 +9,6 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -54,40 +53,37 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
 
                         // =========================
-                        // STUDENT ACCESS
+                        // STUDENT ONLY
                         // =========================
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
                         .requestMatchers("/api/student/exam/submit").hasRole("STUDENT")
 
                         // =========================
-                        // EXAMS (READ ONLY for students, write for examiner/admin)
+                        // EXAMS (ADMIN ONLY for write)
                         // =========================
                         .requestMatchers(HttpMethod.GET, "/api/exams/**")
-                        .hasAnyRole("STUDENT", "EXAMINER", "ADMIN")
+                        .hasAnyRole("STUDENT", "ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/exams/**")
-                        .hasAnyRole("EXAMINER", "ADMIN")
+                        .hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.PUT, "/api/exams/**")
-                        .hasAnyRole("EXAMINER", "ADMIN")
+                        .hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.DELETE, "/api/exams/**")
-                        .hasAnyRole("EXAMINER", "ADMIN")
+                        .hasRole("ADMIN")
 
                         // =========================
-                        // QUESTIONS
+                        // QUESTIONS (ADMIN ONLY)
                         // =========================
-                        .requestMatchers(HttpMethod.GET, "/api/questions/**")
-                        .hasAnyRole("STUDENT", "EXAMINER", "ADMIN")
-
                         .requestMatchers("/api/questions/**")
-                        .hasAnyRole("EXAMINER", "ADMIN")
+                        .hasRole("ADMIN")
 
                         // =========================
                         // RESULTS
                         // =========================
                         .requestMatchers("/api/results/**")
-                        .hasAnyRole("STUDENT", "ADMIN", "EXAMINER")
+                        .hasAnyRole("STUDENT", "ADMIN")
 
                         // =========================
                         // ADMIN ONLY
@@ -95,7 +91,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // =========================
-                        // OTHERS SECURE
+                        // EVERYTHING ELSE SECURE
                         // =========================
                         .anyRequest().authenticated()
                 )
@@ -113,12 +109,10 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider(
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder
+            UserDetailsService userDetailsService
     ) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
 
@@ -135,7 +129,6 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOriginPatterns(List.of(
-                "http://localhost:*",
                 "https://online-exam-2026.netlify.app"
         ));
 
