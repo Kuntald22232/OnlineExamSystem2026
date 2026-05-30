@@ -23,7 +23,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
-   // ================= REGISTER =================
+    // ================= REGISTER =================
     public String register(RegisterRequest request) {
 
         System.out.println("========== REGISTER ==========");
@@ -31,68 +31,28 @@ public class AuthService {
         System.out.println("EMAIL: " + request.getEmail());
         System.out.println("ROLE RECEIVED: " + request.getRole());
 
-        // 🔥 DEBUG EXAMINER CHECK
-        if (request.getRole() == Role.EXAMINER) {
-            System.out.println("🔥 EXAMINER DETECTED");
-        }
+        // ❌ REMOVED EXAMINER LOGIC COMPLETELY
 
-        // ✅ EMAIL CHECK
         if (userRepository.existsByEmail(request.getEmail())) {
-            System.out.println("❌ EMAIL ALREADY EXISTS");
             return "Email already exists!";
         }
 
-        // ✅ ROLE SET
         Role role = (request.getRole() != null)
                 ? request.getRole()
                 : Role.STUDENT;
 
-        System.out.println("✅ FINAL ROLE: " + role);
-
-        // ✅ BUILD USER
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
-                .password(
-                        passwordEncoder.encode(
-                                request.getPassword()
-                        )
-                )
+                .password(passwordEncoder.encode(request.getPassword()))
                 .role(role)
                 .build();
 
-        // 🔥 DEBUG USER OBJECT
-        System.out.println(
-                "🔥 USER OBJECT: " + user
-        );
-
-        // 🔥 IMPORTANT DEBUG
-        System.out.println(
-                "🔥 ROLE TYPE = " + role.name()
-        );
-
-        System.out.println(
-                "🔥 USER ROLE = " + user.getRole()
-        );
-
-        System.out.println(
-                "💾 SAVING USER..."
-        );
-
-        // 💾 SAVE
         userRepository.save(user);
 
-        System.out.println(
-                "✅ SAVED IN DATABASE"
-        );
-
-        System.out.println(
-                "✅ USER SAVED SUCCESSFULLY"
-        );
-
-        return role
-                + " Registered Successfully!";
+        return role + " Registered Successfully!";
     }
+
     // ================= LOGIN =================
     public LoginResponse login(LoginRequest request) {
 
@@ -106,14 +66,16 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String token = jwtService.generateToken(user.getEmail());
+        String token = jwtService.generateToken(
+                user.getEmail(),
+                user.getRole().name()
+        );
 
-        // 🔥 CORRECT REDIRECT
         String redirectTo = switch (user.getRole()) {
-        case STUDENT -> "/student/dashboard";
-        case EXAMINER -> "/admin/dashboard";
-        case ADMIN -> "/admin/dashboard";
-    };
+            case STUDENT -> "/student/dashboard";
+            case ADMIN -> "/admin/dashboard";
+            default -> "/login";
+        };
 
         return new LoginResponse(
                 "Login Successful!",
