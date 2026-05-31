@@ -12,7 +12,7 @@ public class StudentResult {
     private Long id;
 
     @Column(name =
-            "registration_no")
+            "registration_no",unique = true)
     private String registrationNo;
 
     private String subject;

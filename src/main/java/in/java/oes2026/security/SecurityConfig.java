@@ -88,19 +88,16 @@ public class SecurityConfig {
 
                         // ================= RESULTS =================
 
-                        // Student + Admin can view
+                     // RESULTS
                         .requestMatchers(HttpMethod.GET, "/api/results/**")
                         .hasAnyRole("STUDENT", "ADMIN")
 
-                        // Only Admin can create
                         .requestMatchers(HttpMethod.POST, "/api/results/**")
                         .hasRole("ADMIN")
 
-                        // Only Admin can update
                         .requestMatchers(HttpMethod.PUT, "/api/results/**")
                         .hasRole("ADMIN")
 
-                        // Only Admin can delete
                         .requestMatchers(HttpMethod.DELETE, "/api/results/**")
                         .hasRole("ADMIN")
 
