@@ -5,10 +5,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -35,13 +35,12 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-                .authenticationProvider(authProvider)
 
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                org.springframework.security.config.http.SessionCreationPolicy.STATELESS
-                        )
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
+                .authenticationProvider(authProvider)
 
                 .authorizeHttpRequests(auth -> auth
 
@@ -51,60 +50,52 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
 
                         // ================= STUDENT =================
-                        .requestMatchers("/api/student/**").hasRole("STUDENT")
+                        .requestMatchers("/api/student/**").hasAnyAuthority("ROLE_STUDENT")
 
                         // ================= EXAMS =================
+                        .requestMatchers("/api/exams/student/**").hasAnyAuthority("ROLE_STUDENT")
 
-                        // STUDENT endpoints FIRST
-                        .requestMatchers("/api/exams/student/**").hasRole("STUDENT")
-
-                        // GET exams for both
                         .requestMatchers(HttpMethod.GET, "/api/exams/**")
-                        .hasAnyRole("STUDENT", "ADMIN")
+                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
 
-                        // ADMIN only write operations
                         .requestMatchers(HttpMethod.POST, "/api/exams/**")
-                        .hasRole("ADMIN")
+                        .hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.PUT, "/api/exams/**")
-                        .hasRole("ADMIN")
+                        .hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.DELETE, "/api/exams/**")
-                        .hasRole("ADMIN")
+                        .hasAuthority("ROLE_ADMIN")
 
                         // ================= QUESTIONS =================
-
                         .requestMatchers(HttpMethod.GET, "/api/questions/**")
-                        .hasAnyRole("STUDENT", "ADMIN")
+                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/questions/**")
-                        .hasRole("ADMIN")
+                        .hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.PUT, "/api/questions/**")
-                        .hasRole("ADMIN")
+                        .hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.DELETE, "/api/questions/**")
-                        .hasRole("ADMIN")
+                        .hasAuthority("ROLE_ADMIN")
 
                         // ================= RESULTS =================
-
-                     // RESULTS
                         .requestMatchers(HttpMethod.GET, "/api/results/**")
-                        .hasAnyRole("STUDENT", "ADMIN")
+                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/results/**")
-                        .hasRole("ADMIN")
+                        .hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.PUT, "/api/results/**")
-                        .hasRole("ADMIN")
+                        .hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.DELETE, "/api/results/**")
-                        .hasRole("ADMIN")
+                        .hasAuthority("ROLE_ADMIN")
 
                         // ================= ADMIN =================
-
                         .requestMatchers("/api/admin/**")
-                        .hasRole("ADMIN")
+                        .hasAuthority("ROLE_ADMIN")
 
                         .anyRequest().authenticated()
                 )
@@ -117,45 +108,38 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // ================= CORS =================
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration = new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(List.of(
+        config.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
                 "https://online-exam-2026.netlify.app"
         ));
 
-        configuration.setAllowedMethods(List.of(
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE",
-                "OPTIONS"
-        ));
-
-        configuration.setAllowedHeaders(List.of("*"));
-
-        configuration.setAllowCredentials(true);
-
-        configuration.setExposedHeaders(List.of("Authorization"));
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setExposedHeaders(List.of("Authorization"));
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
 
         return source;
     }
 
+    // ================= AUTH =================
     @Bean
     public AuthenticationProvider authenticationProvider(
-            UserDetailsService userDetailsService,
-            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder
+            org.springframework.security.core.userdetails.UserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder
     ) {
-        DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider();
+        org.springframework.security.authentication.dao.DaoAuthenticationProvider provider =
+                new org.springframework.security.authentication.dao.DaoAuthenticationProvider();
 
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
@@ -167,7 +151,6 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config
     ) throws Exception {
-
         return config.getAuthenticationManager();
     }
 }
