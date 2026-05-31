@@ -40,19 +40,19 @@ public class StudentResultService {
     public List<StudentResult> getAllResults() {
         return repository.findAll();
     }
-    public StudentResult updateResultByRegistrationNo(
-            String registrationNo,
-            StudentResult updatedResult
-    ) {
-        StudentResult existing = repository
-                .findByRegistrationNo(registrationNo)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Result not found"));
+    public StudentResult updateResultByRegistrationNo(String regNo, StudentResult updated) {
 
-        existing.setSubject(updatedResult.getSubject());
-        existing.setMarks(updatedResult.getMarks());
-        existing.setGrade(updatedResult.getGrade());
+        List<StudentResult> list = repository.findByRegistrationNo(regNo);
+
+        if (list.isEmpty()) {
+            throw new RuntimeException("Result not found");
+        }
+
+        StudentResult existing = list.get(0);
+
+        existing.setSubject(updated.getSubject());
+        existing.setMarks(updated.getMarks());
+        existing.setGrade(updated.getGrade());
 
         return repository.save(existing);
     }

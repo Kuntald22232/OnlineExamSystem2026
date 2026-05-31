@@ -18,48 +18,37 @@ public class ResultController {
         this.service = service;
     }
 
-    // CREATE RESULT
+    // CREATE
     @PostMapping
-    public StudentResult addResult(
-            @RequestBody StudentResult result) {
-
+    public StudentResult addResult(@RequestBody StudentResult result) {
         return service.saveResult(result);
     }
 
-    // GET ALL RESULTS
+    // GET ALL
     @GetMapping("/all")
     public List<StudentResult> getAllResults() {
-
         return service.getAllResults();
     }
 
-    // GET RESULT BY REGISTRATION NUMBER
+    // GET BY REG NO
     @GetMapping("/registration/{registrationNo}")
-    public List<StudentResult> getResult(
-            @PathVariable String registrationNo) {
-
+    public List<StudentResult> getResult(@PathVariable String registrationNo) {
         return service.getResult(registrationNo);
     }
 
-    // UPDATE RESULT BY REGISTRATION NUMBER
+    // UPDATE (SAFE)
     @PutMapping("/registration/{registrationNo}")
     public StudentResult updateResult(
             @PathVariable String registrationNo,
-            @RequestBody StudentResult updatedResult) {
-
-        return service.updateResultByRegistrationNo(
-                registrationNo,
-                updatedResult
-        );
+            @RequestBody StudentResult updatedResult
+    ) {
+        return service.updateResultByRegistrationNo(registrationNo, updatedResult);
     }
 
-    // DELETE RESULT BY ID
-    @DeleteMapping("/delete/{id}")
-    public String deleteResult(
-            @PathVariable Long id) {
-
+    // DELETE (IMPORTANT FIX)
+    @DeleteMapping("/registration/{registrationNo}")
+    public String deleteResult(@PathVariable Long id) {
         service.deleteResult(id);
-
         return "Result deleted successfully";
     }
 }
