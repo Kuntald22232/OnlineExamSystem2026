@@ -33,73 +33,51 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
+                // ================= CORS =================
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
 
+                // ================= STATELESS =================
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
+                // ================= AUTH PROVIDER =================
                 .authenticationProvider(authProvider)
 
+                // ================= SECURITY RULES =================
                 .authorizeHttpRequests(auth -> auth
 
-                        // ================= PUBLIC =================
+                        // ===== PUBLIC =====
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
 
-                        // ================= STUDENT =================
-                        .requestMatchers("/api/student/**").hasAnyAuthority("ROLE_STUDENT")
-
-                        // ================= EXAMS =================
-                        .requestMatchers("/api/exams/student/**").hasAnyAuthority("ROLE_STUDENT")
-
-                        .requestMatchers(HttpMethod.GET, "/api/exams/**")
-                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
-
-                        .requestMatchers(HttpMethod.POST, "/api/exams/**")
-                        .hasAuthority("ROLE_ADMIN")
-
-                        .requestMatchers(HttpMethod.PUT, "/api/exams/**")
-                        .hasAuthority("ROLE_ADMIN")
-
-                        .requestMatchers(HttpMethod.DELETE, "/api/exams/**")
-                        .hasAuthority("ROLE_ADMIN")
-
-                        // ================= QUESTIONS =================
-                        .requestMatchers(HttpMethod.GET, "/api/questions/**")
-                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
-
-                        .requestMatchers(HttpMethod.POST, "/api/questions/**")
-                        .hasAuthority("ROLE_ADMIN")
-
-                        .requestMatchers(HttpMethod.PUT, "/api/questions/**")
-                        .hasAuthority("ROLE_ADMIN")
-
-                        .requestMatchers(HttpMethod.DELETE, "/api/questions/**")
-                        .hasAuthority("ROLE_ADMIN")
-
-                        // ================= RESULTS =================
-                        .requestMatchers(HttpMethod.GET, "/api/results/**")
-                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
-
-                        .requestMatchers(HttpMethod.POST, "/api/results/**")
-                        .hasAuthority("ROLE_ADMIN")
-
-                        .requestMatchers(HttpMethod.PUT, "/api/results/**")
-                        .hasAuthority("ROLE_ADMIN")
-
-                        .requestMatchers(HttpMethod.DELETE, "/api/results/**")
-                        .hasAuthority("ROLE_ADMIN")
-
-                        // ================= ADMIN =================
+                        // ===== ADMIN =====
                         .requestMatchers("/api/admin/**")
                         .hasAuthority("ROLE_ADMIN")
 
+                        // ===== STUDENT =====
+                        .requestMatchers("/api/student/**")
+                        .hasAuthority("ROLE_STUDENT")
+
+                        // ===== EXAMS (BOTH) =====
+                        .requestMatchers("/api/exams/**")
+                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
+
+                        // ===== QUESTIONS (BOTH) =====
+                        .requestMatchers("/api/questions/**")
+                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
+
+                        // ===== RESULTS (BOTH) =====
+                        .requestMatchers("/api/results/**")
+                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
+
+                        // ===== DEFAULT =====
                         .anyRequest().authenticated()
                 )
 
+                // ================= JWT FILTER =================
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -108,20 +86,26 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ================= CORS =================
+    // ================= CORS CONFIG =================
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of(
+        // FIX: use allowedOrigins instead of patterns (faster + stable)
+        config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
                 "https://online-exam-2026.netlify.app"
         ));
 
-        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
+
         config.setAllowedHeaders(List.of("*"));
+
         config.setAllowCredentials(true);
+
         config.setExposedHeaders(List.of("Authorization"));
 
         UrlBasedCorsConfigurationSource source =
@@ -132,12 +116,13 @@ public class SecurityConfig {
         return source;
     }
 
-    // ================= AUTH =================
+    // ================= AUTH PROVIDER =================
     @Bean
     public AuthenticationProvider authenticationProvider(
             org.springframework.security.core.userdetails.UserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder
     ) {
+
         org.springframework.security.authentication.dao.DaoAuthenticationProvider provider =
                 new org.springframework.security.authentication.dao.DaoAuthenticationProvider();
 
@@ -147,6 +132,7 @@ public class SecurityConfig {
         return provider;
     }
 
+    // ================= AUTH MANAGER =================
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config

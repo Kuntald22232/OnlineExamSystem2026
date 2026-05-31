@@ -26,12 +26,11 @@ public class AuthService {
     // ================= REGISTER =================
     public String register(RegisterRequest request) {
 
+        long start = System.currentTimeMillis();
         System.out.println("========== REGISTER ==========");
         System.out.println("FULL NAME: " + request.getFullName());
         System.out.println("EMAIL: " + request.getEmail());
         System.out.println("ROLE RECEIVED: " + request.getRole());
-
-        // ❌ REMOVED EXAMINER LOGIC COMPLETELY
 
         if (userRepository.existsByEmail(request.getEmail())) {
             return "Email already exists!";
@@ -50,12 +49,18 @@ public class AuthService {
 
         userRepository.save(user);
 
+        System.out.println("REGISTER TIME: " + (System.currentTimeMillis() - start) + " ms");
+
         return role + " Registered Successfully!";
     }
 
     // ================= LOGIN =================
     public LoginResponse login(LoginRequest request) {
 
+        long start = System.currentTimeMillis();
+        System.out.println("========== LOGIN START ==========");
+
+        // Step 1: authenticate (this also checks DB internally)
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -63,25 +68,25 @@ public class AuthService {
                 )
         );
 
+        // Step 2: fetch user (⚡ main optimization point later: remove this if possible)
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Step 3: generate JWT
         String token = jwtService.generateToken(
                 user.getEmail(),
                 user.getRole().name()
         );
 
-        String redirectTo = switch (user.getRole()) {
-            case STUDENT -> "/student/dashboard";
-            case ADMIN -> "/admin/dashboard";
-            default -> "/login";
-        };
+        System.out.println("LOGIN TOTAL TIME: " + (System.currentTimeMillis() - start) + " ms");
 
         return new LoginResponse(
                 "Login Successful!",
                 token,
                 user.getRole().name(),
-                redirectTo
+                user.getRole() == Role.STUDENT
+                        ? "/student/dashboard"
+                        : "/admin/dashboard"
         );
     }
 }

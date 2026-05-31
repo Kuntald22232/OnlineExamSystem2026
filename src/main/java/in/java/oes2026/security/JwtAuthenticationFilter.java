@@ -16,127 +16,78 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-public class JwtAuthenticationFilter
-        extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtService jwtService;
 
     @Autowired
-    private CustomUserDetailsService
-            userDetailsService;
+    private CustomUserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain
-    ) throws ServletException,
-            IOException {
+    ) throws ServletException, IOException {
 
-        String path =
-                request.getServletPath();
+        String path = request.getServletPath();
 
-        // ✅ PUBLIC ROUTES BYPASS
-        if (
-                path.startsWith("/api/auth") ||
-                path.startsWith("/api/upcoming-exam") ||
-                path.startsWith("/uploads")
-        ) {
+        // ✅ PUBLIC ROUTES
+        if (path.startsWith("/api/auth")
+                || path.startsWith("/api/upcoming-exam")
+                || path.startsWith("/uploads")) {
 
-            filterChain.doFilter(
-                    request,
-                    response
-            );
-
+            filterChain.doFilter(request, response);
             return;
         }
 
-        String authHeader =
-                request.getHeader(
-                        "Authorization"
-                );
+        String authHeader = request.getHeader("Authorization");
 
-        if (
-                authHeader == null ||
-                !authHeader.startsWith(
-                        "Bearer "
-                )
-        ) {
-
-            filterChain.doFilter(
-                    request,
-                    response
-            );
-
+        // ❌ NO TOKEN → continue safely
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
             return;
         }
 
         try {
 
-            String token =
-                    authHeader.substring(7);
+            String token = authHeader.substring(7);
 
-            String username =
-                    jwtService.extractUsername(
-                            token
-                    );
+            // ⚡ validate early (avoid unnecessary DB hit)
+            if (!jwtService.isTokenValid(token, jwtService.extractUsername(token))) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-            if (
-                    username != null &&
-                    SecurityContextHolder
-                            .getContext()
-                            .getAuthentication()
-                            == null
-            ) {
+            String username = jwtService.extractUsername(token);
 
-                UserDetails userDetails =
-                        userDetailsService
-                                .loadUserByUsername(
-                                        username
-                                );
+            // ❌ already authenticated → skip
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                if (
-                        jwtService.isTokenValid(
-                                token,
-                                userDetails.getUsername()
-                        )
-                ) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                    UsernamePasswordAuthenticationToken
-                            authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(
-                                            request
-                                    )
-                    );
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
 
-                    SecurityContextHolder
-                            .getContext()
-                            .setAuthentication(
-                                    authToken
-                            );
-                }
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
 
         } catch (Exception e) {
+            // ✅ NEVER break request flow
+            System.out.println("JWT Filter Error: " + e.getMessage());
 
-            System.out.println(
-                    "JWT ERROR: "
-                            + e.getMessage()
-            );
+            SecurityContextHolder.clearContext();
         }
 
-        filterChain.doFilter(
-                request,
-                response
-        );
+        filterChain.doFilter(request, response);
     }
 }

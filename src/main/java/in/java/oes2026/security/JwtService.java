@@ -5,6 +5,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
@@ -18,16 +19,27 @@ public class JwtService {
     // KEY GENERATION
     // =========================
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }
 
     // =========================
-    // GENERATE TOKEN (username + role)
+    // PARSE ONCE (🔥 OPTIMIZED)
+    // =========================
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    // =========================
+    // GENERATE TOKEN
     // =========================
     public String generateToken(String username, String role) {
         return Jwts.builder()
                 .setSubject(username)
-                .claim("role", "ROLE_" + role)   // 🔥 FIX HERE
+                .claim("role", "ROLE_" + role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 86400000))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -38,24 +50,14 @@ public class JwtService {
     // EXTRACT USERNAME
     // =========================
     public String extractUsername(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        return extractAllClaims(token).getSubject();
     }
 
     // =========================
-    // EXTRACT ROLE (optional but useful)
+    // EXTRACT ROLE
     // =========================
     public String extractRole(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("role", String.class);
+        return extractAllClaims(token).get("role", String.class);
     }
 
     // =========================
@@ -63,23 +65,13 @@ public class JwtService {
     // =========================
     public boolean isTokenValid(String token, String username) {
         try {
-            return extractUsername(token).equals(username)
-                    && !isTokenExpired(token);
+            Claims claims = extractAllClaims(token);
+
+            return claims.getSubject().equals(username)
+                    && !claims.getExpiration().before(new Date());
+
         } catch (Exception e) {
             return false;
         }
-    }
-
-    // =========================
-    // CHECK EXPIRATION
-    // =========================
-    private boolean isTokenExpired(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getExpiration()
-                .before(new Date());
     }
 }
