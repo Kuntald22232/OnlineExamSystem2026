@@ -53,21 +53,27 @@ public class SecurityConfig {
                         // ================= STUDENT =================
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
 
-                     // ================= EXAMS =================
+                        // ================= EXAMS =================
 
-                     // STUDENT endpoints FIRST
-                     .requestMatchers("/api/exams/student/**").hasRole("STUDENT")
+                        // STUDENT endpoints FIRST
+                        .requestMatchers("/api/exams/student/**").hasRole("STUDENT")
 
-                     // GET exams for both
-                     .requestMatchers(HttpMethod.GET, "/api/exams/**")
-                     .hasAnyRole("STUDENT", "ADMIN")
+                        // GET exams for both
+                        .requestMatchers(HttpMethod.GET, "/api/exams/**")
+                        .hasAnyRole("STUDENT", "ADMIN")
 
-                     // ADMIN only write operations
-                     .requestMatchers(HttpMethod.POST, "/api/exams/**").hasRole("ADMIN")
-                     .requestMatchers(HttpMethod.PUT, "/api/exams/**").hasRole("ADMIN")
-                     .requestMatchers(HttpMethod.DELETE, "/api/exams/**").hasRole("ADMIN")
+                        // ADMIN only write operations
+                        .requestMatchers(HttpMethod.POST, "/api/exams/**")
+                        .hasRole("ADMIN")
 
-                        // ================= QUESTIONS (🔥 FIXED) =================
+                        .requestMatchers(HttpMethod.PUT, "/api/exams/**")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.DELETE, "/api/exams/**")
+                        .hasRole("ADMIN")
+
+                        // ================= QUESTIONS =================
+
                         .requestMatchers(HttpMethod.GET, "/api/questions/**")
                         .hasAnyRole("STUDENT", "ADMIN")
 
@@ -81,10 +87,25 @@ public class SecurityConfig {
                         .hasRole("ADMIN")
 
                         // ================= RESULTS =================
-                        .requestMatchers("/api/results/**")
+
+                        // Student + Admin can view
+                        .requestMatchers(HttpMethod.GET, "/api/results/**")
                         .hasAnyRole("STUDENT", "ADMIN")
 
+                        // Only Admin can create
+                        .requestMatchers(HttpMethod.POST, "/api/results/**")
+                        .hasRole("ADMIN")
+
+                        // Only Admin can update
+                        .requestMatchers(HttpMethod.PUT, "/api/results/**")
+                        .hasRole("ADMIN")
+
+                        // Only Admin can delete
+                        .requestMatchers(HttpMethod.DELETE, "/api/results/**")
+                        .hasRole("ADMIN")
+
                         // ================= ADMIN =================
+
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
 
@@ -136,9 +157,12 @@ public class SecurityConfig {
             UserDetailsService userDetailsService,
             org.springframework.security.crypto.password.PasswordEncoder passwordEncoder
     ) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider();
+
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
+
         return provider;
     }
 
@@ -146,6 +170,7 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config
     ) throws Exception {
+
         return config.getAuthenticationManager();
     }
 }
