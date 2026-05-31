@@ -37,4 +37,7 @@ public class StudentResultService {
                 .findByRegistrationNo(
                         registrationNo);
     }
+    public List<StudentResult> getAllResults() {
+        return repository.findAll();
+    }
 }

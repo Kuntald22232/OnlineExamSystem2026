@@ -30,6 +30,10 @@ public class ResultController {
                 service;
     }
 
+    @GetMapping("/all")
+    public List<StudentResult> getAllResults() {
+        return service.getAllResults();
+    }
     @PostMapping
     public StudentResult
     addResult(
