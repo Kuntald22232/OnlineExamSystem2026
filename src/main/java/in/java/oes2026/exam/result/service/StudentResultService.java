@@ -44,13 +44,11 @@ public class StudentResultService {
             String registrationNo,
             StudentResult updatedResult
     ) {
-
         StudentResult existing = repository
                 .findByRegistrationNo(registrationNo)
                 .stream()
                 .findFirst()
-                .orElseThrow(() ->
-                        new RuntimeException("Result not found"));
+                .orElseThrow(() -> new RuntimeException("Result not found"));
 
         existing.setSubject(updatedResult.getSubject());
         existing.setMarks(updatedResult.getMarks());
