@@ -52,7 +52,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
-
+                        .requestMatchers("/api/upcoming-exam/**")
+                        .permitAll()
                         // ===== ADMIN =====
                         .requestMatchers("/api/admin/**")
                         .hasAuthority("ROLE_ADMIN")
@@ -64,6 +65,9 @@ public class SecurityConfig {
                         // ===== EXAMS (BOTH) =====
                         .requestMatchers("/api/exams/**")
                         .hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
+
+                        .requestMatchers("/api/student/exam/submit")
+                        .hasAnyAuthority("ROLE_STUDENT")
 
                         // ===== QUESTIONS (BOTH) =====
                         .requestMatchers("/api/questions/**")
