@@ -59,25 +59,22 @@ public class StudentExamController {
 
         submission.setStudent(student);
         submission.setExam(exam);
-
-        // ✅ Subject save
-        submission.setSubject(exam.getSubject());
-
+        submission.setSubject(exam.getSubject()); // ADD THIS
         submission.setSubmittedAt(LocalDateTime.now());
         submission.setCheckedByTeacher(false);
 
         submissionRepository.save(submission);
 
-        // ✅ SAVE ANSWERS
         for (AnswerRequest a : request.getAnswers()) {
+
             AnswerEntity ans = new AnswerEntity();
+
             ans.setSubmission(submission);
             ans.setQuestionId(a.getQuestionId());
             ans.setSelectedAnswer(a.getSelectedAnswer());
 
             answerRepository.save(ans);
         }
-
         return "Exam submitted successfully";
     }
 }

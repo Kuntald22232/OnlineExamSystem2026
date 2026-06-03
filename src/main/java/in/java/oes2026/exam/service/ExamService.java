@@ -15,49 +15,70 @@ public class ExamService {
 
     private final ExamRepository examRepository;
 
-    // CREATE
+    // ================= CREATE =================
     public ExamEntity createExam(ExamEntity exam) {
+
         exam.setActive(true);
+
         return examRepository.save(exam);
     }
 
-    // UPDATE 🔥 ADD THIS
-    public ExamEntity updateExam(Long examId, ExamEntity updatedExam) {
+    // ================= UPDATE =================
+    public ExamEntity updateExam(
+            Long examId,
+            ExamEntity updatedExam
+    ) {
 
-        ExamEntity existing = examRepository.findById(examId)
-                .orElseThrow(() -> new RuntimeException("Exam not found with id: " + examId));
+        ExamEntity existing =
+                examRepository.findById(examId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Exam not found with id: " + examId
+                                ));
 
         existing.setExamTitle(updatedExam.getExamTitle());
         existing.setDurationInMinutes(updatedExam.getDurationInMinutes());
         existing.setExamDate(updatedExam.getExamDate());
         existing.setActive(updatedExam.getActive());
 
+        // 🔥 Subject update
+        existing.setSubject(updatedExam.getSubject());
+
         return examRepository.save(existing);
     }
 
-    // DELETE 🔥 ADD THIS
+    // ================= DELETE =================
     public void deleteExam(Long examId) {
 
-        ExamEntity existing = examRepository.findById(examId)
-                .orElseThrow(() -> new RuntimeException("Exam not found with id: " + examId));
+        ExamEntity existing =
+                examRepository.findById(examId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Exam not found with id: " + examId
+                                ));
 
         examRepository.delete(existing);
     }
 
-    // ALL
+    // ================= ALL =================
     public List<ExamEntity> getAllExams() {
         return examRepository.findAll();
     }
 
-    // ACTIVE
+    // ================= ACTIVE =================
     public List<ExamEntity> getActiveExams() {
+
         return examRepository.findAll()
                 .stream()
-                .filter(e -> Boolean.TRUE.equals(e.getActive()))
+                .filter(e ->
+                        Boolean.TRUE.equals(
+                                e.getActive()
+                        )
+                )
                 .toList();
     }
 
-    // UPCOMING
+    // ================= UPCOMING =================
     public List<ExamEntity> getUpcomingExams() {
 
         LocalDateTime now = LocalDateTime.now();
@@ -65,21 +86,25 @@ public class ExamService {
         return examRepository.findAll()
                 .stream()
                 .filter(e ->
-                        Boolean.TRUE.equals(e.getActive()) &&
-                        e.getExamDate() != null &&
-                        e.getExamDate().isAfter(now)
+                        Boolean.TRUE.equals(e.getActive())
+                                && e.getExamDate() != null
+                                && e.getExamDate().isAfter(now)
                 )
                 .toList();
     }
 
-    // AVAILABLE
+    // ================= AVAILABLE =================
     public List<ExamEntity> getAvailableExams() {
         return examRepository.findAll();
     }
 
-    // SINGLE
+    // ================= SINGLE =================
     public ExamEntity getById(Long id) {
+
         return examRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Exam not found"));
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Exam not found"
+                        ));
     }
 }

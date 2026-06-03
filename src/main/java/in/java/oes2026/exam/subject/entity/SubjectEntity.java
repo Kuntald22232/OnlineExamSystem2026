@@ -1,5 +1,7 @@
 package in.java.oes2026.exam.subject.entity;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import in.java.oes2026.exam.entity.ExamEntity;
 import jakarta.persistence.*;
@@ -20,13 +22,7 @@ public class SubjectEntity {
 
     private String subjectName;
 
-    @ManyToOne
-    @JoinColumn(name = "exam_id")
-    @JsonIgnoreProperties({
-            "questions",
-            "submissions",
-            "hibernateLazyInitializer",
-            "handler"
-    })
-    private ExamEntity exam;
+    @OneToMany(mappedBy = "subject")
+    @JsonIgnoreProperties("subject")
+    private List<ExamEntity> exams;
 }
