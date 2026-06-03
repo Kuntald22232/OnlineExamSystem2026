@@ -9,11 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -54,37 +56,50 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String token = authHeader.substring(7);
 
-            // ⚡ validate early (avoid unnecessary DB hit)
-            if (!jwtService.isTokenValid(token, jwtService.extractUsername(token))) {
+            // extract username once (OPTIMIZED)
+            String usernameFromToken = jwtService.extractUsername(token);
+
+            // ⚡ validate token
+            if (!jwtService.isTokenValid(token, usernameFromToken)) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            String username = jwtService.extractUsername(token);
+            // already authenticated skip
+            if (usernameFromToken != null &&
+                    SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // ❌ already authenticated → skip
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(usernameFromToken);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                String role = jwtService.extractRole(token);
+
+                // 🔥 FIXED: proper Spring authority
+                if (role == null) {
+                    role = "ROLE_STUDENT";
+                }
 
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
                                 userDetails,
                                 null,
-                                userDetails.getAuthorities()
+                                List.of(new SimpleGrantedAuthority(role))
                         );
 
                 authToken.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request)
                 );
 
+                // DEBUG LOGS
+                System.out.println("USERNAME => " + usernameFromToken);
+                System.out.println("ROLE => " + role);
+
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
 
         } catch (Exception e) {
-            // ✅ NEVER break request flow
-            System.out.println("JWT Filter Error: " + e.getMessage());
 
+            System.out.println("JWT Filter Error: " + e.getMessage());
             SecurityContextHolder.clearContext();
         }
 
