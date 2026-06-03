@@ -1,5 +1,6 @@
 package in.java.oes2026.exam.entity;
 
+import in.java.oes2026.exam.subject.entity.SubjectEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,8 +23,13 @@ public class ExamEntity {
 
     private Integer durationInMinutes;
 
-    // 🔥 NEW: exam start date & time
+    // Exam start date & time
     private LocalDateTime examDate;
 
     private Boolean active;
+
+    // ✅ Subject Relation
+    @ManyToOne
+    @JoinColumn(name = "subject_id")
+    private SubjectEntity subject;
 }

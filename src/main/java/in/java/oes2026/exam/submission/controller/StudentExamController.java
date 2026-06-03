@@ -59,6 +59,10 @@ public class StudentExamController {
 
         submission.setStudent(student);
         submission.setExam(exam);
+
+        // ✅ Subject save
+        submission.setSubject(exam.getSubject());
+
         submission.setSubmittedAt(LocalDateTime.now());
         submission.setCheckedByTeacher(false);
 
