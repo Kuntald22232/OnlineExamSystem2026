@@ -4,6 +4,9 @@ import org.springframework.stereotype.Service;
 
 import in.java.oes2026.exam.entity.ExamEntity;
 import in.java.oes2026.exam.repository.ExamRepository;
+import in.java.oes2026.exam.subject.repository.SubjectRepository;
+import in.java.oes2026.exam.subject.entity.SubjectEntity;
+
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -14,10 +17,17 @@ import java.util.List;
 public class ExamService {
 
     private final ExamRepository examRepository;
+    private final SubjectRepository subjectRepository;
 
     // ================= CREATE =================
     public ExamEntity createExam(ExamEntity exam) {
 
+        Long subjectId = exam.getSubject().getId();
+
+        SubjectEntity subject = subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+
+        exam.setSubject(subject);
         exam.setActive(true);
 
         return examRepository.save(exam);
@@ -41,8 +51,13 @@ public class ExamService {
         existing.setExamDate(updatedExam.getExamDate());
         existing.setActive(updatedExam.getActive());
 
-        // 🔥 Subject update
-        existing.setSubject(updatedExam.getSubject());
+        // 🔥 FIXED SUBJECT UPDATE (IMPORTANT)
+        Long subjectId = updatedExam.getSubject().getId();
+
+        SubjectEntity subject = subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+
+        existing.setSubject(subject);
 
         return examRepository.save(existing);
     }
@@ -70,11 +85,7 @@ public class ExamService {
 
         return examRepository.findAll()
                 .stream()
-                .filter(e ->
-                        Boolean.TRUE.equals(
-                                e.getActive()
-                        )
-                )
+                .filter(e -> Boolean.TRUE.equals(e.getActive()))
                 .toList();
     }
 
@@ -103,8 +114,6 @@ public class ExamService {
 
         return examRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException(
-                                "Exam not found"
-                        ));
+                        new RuntimeException("Exam not found"));
     }
 }
