@@ -1,10 +1,9 @@
 package in.java.oes2026.exam.submission.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import in.java.oes2026.exam.entity.ExamEntity;
-import in.java.oes2026.exam.repository.ExamRepository;
 import in.java.oes2026.exam.question.entity.QuestionEntity;
 import in.java.oes2026.exam.question.repository.QuestionRepository;
+import in.java.oes2026.exam.repository.ExamRepository;
 import in.java.oes2026.exam.submission.answer.entity.AnswerEntity;
 import in.java.oes2026.exam.submission.answer.repository.AnswerRepository;
 import in.java.oes2026.exam.submission.dto.AnswerRequest;
@@ -30,20 +29,19 @@ public class StudentExamController {
     private final SubmissionRepository submissionRepository;
     private final ExamUserRepository userRepository;
     private final ExamRepository examRepository;
-    private final ObjectMapper objectMapper;
-
     private final AnswerRepository answerRepository;
-    
-    @GetMapping("/exam/{examId}")
-    public List<QuestionEntity> getQuestionsByExam(
-            @PathVariable Long examId
-    ) {
+
+    // ================= GET QUESTIONS BY EXAM =================
+    @GetMapping("/{examId}")
+    public List<QuestionEntity> getQuestionsByExam(@PathVariable Long examId) {
         return questionRepository.findByExam_Id(examId);
     }
 
+    // ================= SUBMIT EXAM =================
     @PostMapping("/submit")
-    public String submitExam(@RequestBody ExamSubmitRequest request) throws Exception {
+    public String submitExam(@RequestBody ExamSubmitRequest request) {
 
+        // 1. Get logged-in student
         String email = SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getName();
@@ -51,30 +49,32 @@ public class StudentExamController {
         UserEntity student = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
+        // 2. Get exam
         ExamEntity exam = examRepository.findById(request.getExamId())
                 .orElseThrow(() -> new RuntimeException("Exam not found"));
 
-        // ✅ CREATE SUBMISSION FIRST
+        // 3. Create submission
         SubmissionEntity submission = new SubmissionEntity();
-
         submission.setStudent(student);
         submission.setExam(exam);
-        submission.setSubject(exam.getSubject()); // ADD THIS
+        submission.setSubject(exam.getSubject());
         submission.setSubmittedAt(LocalDateTime.now());
         submission.setCheckedByTeacher(false);
 
-        submissionRepository.save(submission);
+        submission = submissionRepository.save(submission);
 
+        // 4. Save answers
         for (AnswerRequest a : request.getAnswers()) {
 
             AnswerEntity ans = new AnswerEntity();
-
             ans.setSubmission(submission);
             ans.setQuestionId(a.getQuestionId());
             ans.setSelectedAnswer(a.getSelectedAnswer());
+            ans.setWrittenAnswer(a.getWrittenAnswer()); // safe if exists
 
             answerRepository.save(ans);
         }
+
         return "Exam submitted successfully";
     }
 }
