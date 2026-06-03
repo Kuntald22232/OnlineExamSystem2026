@@ -1,13 +1,11 @@
 package in.java.oes2026.exam.service;
 
-import org.springframework.stereotype.Service;
-
 import in.java.oes2026.exam.entity.ExamEntity;
 import in.java.oes2026.exam.repository.ExamRepository;
-import in.java.oes2026.exam.subject.repository.SubjectRepository;
 import in.java.oes2026.exam.subject.entity.SubjectEntity;
-
+import in.java.oes2026.exam.subject.repository.SubjectRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +20,10 @@ public class ExamService {
     // ================= CREATE =================
     public ExamEntity createExam(ExamEntity exam) {
 
+        if (exam.getSubject() == null || exam.getSubject().getId() == null) {
+            throw new RuntimeException("Subject ID is required");
+        }
+
         Long subjectId = exam.getSubject().getId();
 
         SubjectEntity subject = subjectRepository.findById(subjectId)
@@ -34,30 +36,25 @@ public class ExamService {
     }
 
     // ================= UPDATE =================
-    public ExamEntity updateExam(
-            Long examId,
-            ExamEntity updatedExam
-    ) {
+    public ExamEntity updateExam(Long examId, ExamEntity updatedExam) {
 
-        ExamEntity existing =
-                examRepository.findById(examId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Exam not found with id: " + examId
-                                ));
+        ExamEntity existing = examRepository.findById(examId)
+                .orElseThrow(() -> new RuntimeException("Exam not found with id: " + examId));
 
         existing.setExamTitle(updatedExam.getExamTitle());
         existing.setDurationInMinutes(updatedExam.getDurationInMinutes());
         existing.setExamDate(updatedExam.getExamDate());
         existing.setActive(updatedExam.getActive());
 
-        // 🔥 FIXED SUBJECT UPDATE (IMPORTANT)
-        Long subjectId = updatedExam.getSubject().getId();
+        // SUBJECT UPDATE (SAFE)
+        if (updatedExam.getSubject() != null && updatedExam.getSubject().getId() != null) {
 
-        SubjectEntity subject = subjectRepository.findById(subjectId)
-                .orElseThrow(() -> new RuntimeException("Subject not found"));
+            SubjectEntity subject = subjectRepository.findById(
+                    updatedExam.getSubject().getId()
+            ).orElseThrow(() -> new RuntimeException("Subject not found"));
 
-        existing.setSubject(subject);
+            existing.setSubject(subject);
+        }
 
         return examRepository.save(existing);
     }
@@ -65,24 +62,19 @@ public class ExamService {
     // ================= DELETE =================
     public void deleteExam(Long examId) {
 
-        ExamEntity existing =
-                examRepository.findById(examId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Exam not found with id: " + examId
-                                ));
+        ExamEntity existing = examRepository.findById(examId)
+                .orElseThrow(() -> new RuntimeException("Exam not found"));
 
         examRepository.delete(existing);
     }
 
-    // ================= ALL =================
+    // ================= GET ALL =================
     public List<ExamEntity> getAllExams() {
         return examRepository.findAll();
     }
 
     // ================= ACTIVE =================
     public List<ExamEntity> getActiveExams() {
-
         return examRepository.findAll()
                 .stream()
                 .filter(e -> Boolean.TRUE.equals(e.getActive()))
@@ -111,9 +103,7 @@ public class ExamService {
 
     // ================= SINGLE =================
     public ExamEntity getById(Long id) {
-
         return examRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Exam not found"));
+                .orElseThrow(() -> new RuntimeException("Exam not found"));
     }
 }
