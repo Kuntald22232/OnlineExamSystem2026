@@ -11,6 +11,8 @@ import in.java.oes2026.exam.submission.repository.SubmissionRepository;
 import in.java.oes2026.exam.user.entity.UserEntity;
 import in.java.oes2026.exam.user.repository.ExamUserRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -36,31 +38,29 @@ public class StudentExamController {
     }
 
     @PostMapping("/submit")
-    public String submitExam(
-            @RequestBody ExamSubmitRequest request
-    ) throws Exception {
+    public String submitExam(@RequestBody ExamSubmitRequest request) throws Exception {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
 
         UserEntity student = userRepository
-                .findById(request.getStudentId())
-                .orElseThrow(() ->
-                        new RuntimeException("Student not found"));
+                .findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
 
         ExamEntity exam = examRepository
                 .findById(request.getExamId())
-                .orElseThrow(() ->
-                        new RuntimeException("Exam not found"));
+                .orElseThrow(() -> new RuntimeException("Exam not found"));
 
-        String answers = objectMapper
-                .writeValueAsString(request.getAnswers());
+        String answers = objectMapper.writeValueAsString(request.getAnswers());
 
-        SubmissionEntity submission =
-                SubmissionEntity.builder()
-                        .student(student)
-                        .exam(exam)
-                        .answersJson(answers)
-                        .submittedAt(LocalDateTime.now())
-                        .checkedByTeacher(false)
-                        .build();
+        SubmissionEntity submission = SubmissionEntity.builder()
+                .student(student)
+                .exam(exam)
+                .answersJson(answers)
+                .submittedAt(LocalDateTime.now())
+                .checkedByTeacher(false)
+                .build();
 
         submissionRepository.save(submission);
 
