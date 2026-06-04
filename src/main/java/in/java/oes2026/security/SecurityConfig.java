@@ -60,7 +60,7 @@ public class SecurityConfig {
 
                         // ===== STUDENT (ALL STUDENT ROUTES) =====
                         .requestMatchers("/api/student/**")
-                        .hasAuthority("ROLE_STUDENT")
+                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
 
                         // ===== EXAMS (BOTH STUDENT + ADMIN) =====
                         .requestMatchers("/api/exams/**")
