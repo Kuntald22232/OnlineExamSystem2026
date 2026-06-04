@@ -20,21 +20,26 @@ public class ExamService {
     // ================= CREATE =================
     public ExamEntity createExam(ExamEntity exam) {
 
-        if (exam.getSubject() == null || exam.getSubject().getId() == null) {
-            throw new RuntimeException("Subject ID is required");
+        if (exam.getSubject() == null) {
+            throw new RuntimeException("Subject is required");
         }
 
         Long subjectId = exam.getSubject().getId();
 
+        if (subjectId == null) {
+            throw new RuntimeException("Subject ID is required");
+        }
+
         SubjectEntity subject = subjectRepository.findById(subjectId)
-                .orElseThrow(() -> new RuntimeException("Subject not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("Subject not found with id: " + subjectId)
+                );
 
         exam.setSubject(subject);
         exam.setActive(true);
 
         return examRepository.save(exam);
     }
-
     // ================= UPDATE =================
     public ExamEntity updateExam(Long examId, ExamEntity updatedExam) {
 

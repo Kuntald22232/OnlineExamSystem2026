@@ -53,6 +53,14 @@ public class StudentExamController {
         ExamEntity exam = examRepository.findById(request.getExamId())
                 .orElseThrow(() -> new RuntimeException("Exam not found"));
 
+        // 🔥 ADD HERE (IMPORTANT FIX)
+        if (exam.getSubject() == null) {
+            throw new RuntimeException("Exam subject is missing");
+        }
+
+        if (exam.getSubject().getId() == null) {
+            throw new RuntimeException("Invalid exam-subject mapping");
+        }
         // 3. Create submission
         SubmissionEntity submission = new SubmissionEntity();
         submission.setStudent(student);
