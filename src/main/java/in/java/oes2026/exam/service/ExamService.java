@@ -1,5 +1,8 @@
 package in.java.oes2026.exam.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import in.java.oes2026.exam.entity.ExamEntity;
 import in.java.oes2026.exam.repository.ExamRepository;
 import in.java.oes2026.exam.subject.entity.SubjectEntity;
@@ -21,19 +24,26 @@ public class ExamService {
     public ExamEntity createExam(ExamEntity exam) {
 
         if (exam.getSubject() == null) {
-            throw new RuntimeException("Subject is required");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Subject is required"
+            );
         }
 
         Long subjectId = exam.getSubject().getId();
 
         if (subjectId == null) {
-            throw new RuntimeException("Subject ID is required");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Subject ID is required"
+            );
         }
 
         SubjectEntity subject = subjectRepository.findById(subjectId)
-                .orElseThrow(() ->
-                        new RuntimeException("Subject not found with id: " + subjectId)
-                );
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Subject not found with id: " + subjectId
+                ));
 
         exam.setSubject(subject);
         exam.setActive(true);
