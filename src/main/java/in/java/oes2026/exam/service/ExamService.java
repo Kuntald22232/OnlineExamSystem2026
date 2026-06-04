@@ -122,4 +122,8 @@ public class ExamService {
                         "Exam not found"
                 ));
     }
+ // ================= AVAILABLE =================
+    public List<ExamEntity> getAvailableExams() {
+        return examRepository.findAll();
+    }
 }
