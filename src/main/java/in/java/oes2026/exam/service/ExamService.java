@@ -1,13 +1,14 @@
 package in.java.oes2026.exam.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 import in.java.oes2026.exam.entity.ExamEntity;
 import in.java.oes2026.exam.repository.ExamRepository;
 import in.java.oes2026.exam.subject.entity.SubjectEntity;
 import in.java.oes2026.exam.subject.repository.SubjectRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -79,7 +80,7 @@ public class ExamService {
         ExamEntity existing = examRepository.findById(examId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Exam not found with id: " + examId
+                        "Exam not found"
                 ));
 
         examRepository.delete(existing);
@@ -113,17 +114,12 @@ public class ExamService {
                 .toList();
     }
 
-    // ================= AVAILABLE =================
-    public List<ExamEntity> getAvailableExams() {
-        return examRepository.findAll();
-    }
-
     // ================= SINGLE =================
     public ExamEntity getById(Long id) {
         return examRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Exam not found with id: " + id
+                        "Exam not found"
                 ));
     }
 }
