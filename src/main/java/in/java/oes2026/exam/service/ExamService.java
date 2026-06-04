@@ -1,14 +1,13 @@
 package in.java.oes2026.exam.service;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
 import in.java.oes2026.exam.entity.ExamEntity;
 import in.java.oes2026.exam.repository.ExamRepository;
 import in.java.oes2026.exam.subject.entity.SubjectEntity;
 import in.java.oes2026.exam.subject.repository.SubjectRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,21 +22,14 @@ public class ExamService {
     // ================= CREATE =================
     public ExamEntity createExam(ExamEntity exam) {
 
-        if (exam.getSubject() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Subject is required"
-            );
-        }
-
-        Long subjectId = exam.getSubject().getId();
-
-        if (subjectId == null) {
+        if (exam.getSubject() == null || exam.getSubject().getId() == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Subject ID is required"
             );
         }
+
+        Long subjectId = exam.getSubject().getId();
 
         SubjectEntity subject = subjectRepository.findById(subjectId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -50,23 +42,30 @@ public class ExamService {
 
         return examRepository.save(exam);
     }
+
     // ================= UPDATE =================
     public ExamEntity updateExam(Long examId, ExamEntity updatedExam) {
 
         ExamEntity existing = examRepository.findById(examId)
-                .orElseThrow(() -> new RuntimeException("Exam not found with id: " + examId));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Exam not found with id: " + examId
+                ));
 
         existing.setExamTitle(updatedExam.getExamTitle());
         existing.setDurationInMinutes(updatedExam.getDurationInMinutes());
         existing.setExamDate(updatedExam.getExamDate());
         existing.setActive(updatedExam.getActive());
 
-        // SUBJECT UPDATE (SAFE)
         if (updatedExam.getSubject() != null && updatedExam.getSubject().getId() != null) {
 
-            SubjectEntity subject = subjectRepository.findById(
-                    updatedExam.getSubject().getId()
-            ).orElseThrow(() -> new RuntimeException("Subject not found"));
+            Long subjectId = updatedExam.getSubject().getId();
+
+            SubjectEntity subject = subjectRepository.findById(subjectId)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Subject not found with id: " + subjectId
+                    ));
 
             existing.setSubject(subject);
         }
@@ -78,7 +77,10 @@ public class ExamService {
     public void deleteExam(Long examId) {
 
         ExamEntity existing = examRepository.findById(examId)
-                .orElseThrow(() -> new RuntimeException("Exam not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Exam not found with id: " + examId
+                ));
 
         examRepository.delete(existing);
     }
@@ -119,6 +121,9 @@ public class ExamService {
     // ================= SINGLE =================
     public ExamEntity getById(Long id) {
         return examRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Exam not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Exam not found with id: " + id
+                ));
     }
 }
